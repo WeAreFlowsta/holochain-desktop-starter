@@ -1,0 +1,17 @@
+[package]
+name = "board_hostile_test"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "Test only: a coordinator a stranger could run against the board's integrity zome (same DNA hash, same network). Never bundled."
+
+# Its own workspace: built only for the tests, never part of the DNA.
+[workspace]
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+hdk = "=0.7.1"
+serde = "1.0"
+board_notes_integrity = { path = "../../board/zomes/notes/integrity" }

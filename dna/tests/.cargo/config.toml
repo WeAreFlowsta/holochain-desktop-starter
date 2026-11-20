@@ -1,0 +1,5 @@
+# One test at a time: each starts a real conductor that compiles the DNA's
+# wasm unoptimized, and with two at once on a two-core CI runner a signed
+# zome call expired before it ran (BadNonce "Expired").
+[env]
+RUST_TEST_THREADS = "1"

@@ -1,0 +1,82 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Holochain Desktop Starter",
+  "version": "0.1.0",
+  "identifier": "com.flowsta.desktopstarter",
+  "build": {
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:5174",
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Holochain Desktop Starter",
+        "width": 900,
+        "height": 700,
+        "minWidth": 700,
+        "minHeight": 500,
+        "resizable": true,
+        "fullscreen": false,
+        "center": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": [
+      "deb",
+      "rpm",
+      "dmg",
+      "app",
+      "nsis",
+      "msi"
+    ],
+    "externalBin": [
+      "binaries/starter-holochain",
+      "binaries/starter-lair-keystore"
+    ],
+    "resources": [
+      "resources/starter_board_v1_happ.happ",
+      "resources/starter_my_notes_v1_happ.happ"
+    ],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "macOS": {
+      "signingIdentity": null,
+      "entitlements": "entitlements.plist",
+      "hardenedRuntime": true
+    },
+    "windows": {
+      "nsis": {
+        "installerHooks": "windows/hooks.nsh"
+      },
+      "signCommand": {
+        "cmd": "pwsh",
+        "args": [
+          "-ExecutionPolicy",
+          "Bypass",
+          "-File",
+          "scripts/sign-windows.ps1",
+          "%1"
+        ]
+      }
+    }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEREMTBEMTE5RUY1RDdBMDYKUldRR2VsM3ZHZEVRM1JZc2M1dW9YcEY1T2NoOWRheDE4K3ZrcnJnTlc1a3ZoU2dzcENVLzlpbVUK"
+    },
+    "shell": {
+      "open": true
+    }
+  }
+}

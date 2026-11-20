@@ -1,0 +1,16 @@
+# SHA-256 of the Holochain binaries this build downloads, as GitHub reports
+# each release asset's digest. A tag with "-flowsta." is a release of
+# https://github.com/WeAreFlowsta/holochain-build (the official source with
+# the patches listed there); any other tag is a release of
+# https://github.com/holochain/holochain. The build stops when a download
+# does not match: a replaced or tampered release asset never reaches an
+# installer.
+# Format: <sha256>  <release tag>/<asset name>
+c129b9975e2841dc02f478890fd6bb94e056625b11ddee499c581ad8f4886036  holochain-0.7.1-flowsta.4/holochain-aarch64-apple-darwin
+96b643b45964d3b6fb302855204d3b70187141da075cf67c891009c1e03d21a0  holochain-0.7.1-flowsta.4/holochain-x86_64-apple-darwin
+552ead734cb308f2163717f7c3d1dbd7b4c0bde1dc4c9d6477366c2cddb654b2  holochain-0.7.1-flowsta.4/holochain-x86_64-pc-windows-msvc.exe
+7b4282196b77f55cc1cc6c3ba6a60a076a2731e17989300b443f71e549dce55f  holochain-0.7.1-flowsta.4/holochain-x86_64-unknown-linux-gnu
+1e074d8587b8bc2125d9a379a443c27363b8e60955cad5faa8638d653dd19289  holochain-0.7.1/lair-keystore-aarch64-apple-darwin
+34a40c1b4324801db1c028dafaf82ea3276c808971c6ad1830fcf445e6f35419  holochain-0.7.1/lair-keystore-x86_64-apple-darwin
+16750b08e5ddd50a04f493142bc85b33cc6bfaf0ef7c7fe9cb215129787a923f  holochain-0.7.1/lair-keystore-x86_64-pc-windows-msvc.exe
+87c7a02556d47d950f0d4284bfdb4e37737b0bc98afe038955817793606d669a  holochain-0.7.1/lair-keystore-x86_64-unknown-linux-gnu

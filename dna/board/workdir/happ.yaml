@@ -1,0 +1,12 @@
+---
+manifest_version: "0"
+name: starter_board_v1_happ
+description: "The board: notes everyone running the app can read"
+roles:
+  - name: board
+    provisioning:
+      strategy: create
+      deferred: false
+    dna:
+      path: starter_board_v1.dna
+      clone_limit: 0

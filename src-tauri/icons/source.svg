@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A placeholder: a sheet with three lines. Replace it with your own and
+     run `npx tauri icon src-tauri/icons/source.svg`. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#14b8a6"/>
+      <stop offset="100%" stop-color="#0f766e"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="224" ry="224" fill="url(#bg)"/>
+  <rect x="272" y="212" width="480" height="600" rx="48" ry="48" fill="#f8fafc"/>
+  <rect x="352" y="340" width="320" height="44" rx="22" fill="#0f766e"/>
+  <rect x="352" y="468" width="320" height="44" rx="22" fill="#0f766e"/>
+  <rect x="352" y="596" width="200" height="44" rx="22" fill="#0f766e"/>
+</svg>

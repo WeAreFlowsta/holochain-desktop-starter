@@ -1,0 +1,14 @@
+[package]
+name = "board_notes_coordinator"
+version = "1.0.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+name = "board_notes_coordinator"
+
+[dependencies]
+hdk = { workspace = true }
+serde = { workspace = true }
+holochain_serialized_bytes = { workspace = true }
+board_notes_integrity = { path = "../integrity" }

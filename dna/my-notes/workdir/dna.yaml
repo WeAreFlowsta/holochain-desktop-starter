@@ -1,0 +1,20 @@
+---
+manifest_version: "0"
+name: starter_my_notes_v1
+integrity:
+  # Never used as it stands: the app installs this DNA with the secret the
+  # person's Flowsta Vault gives it as the network seed, so each person has
+  # a network of their own that only their devices join.
+  network_seed: "replaced-at-install-by-the-persons-own-secret"
+  properties: ~
+  zomes:
+    - name: notes_integrity
+      path: my_notes_integrity.wasm
+      dependencies: []
+
+coordinator:
+  zomes:
+    - name: notes
+      path: my_notes_coordinator.wasm
+      dependencies:
+        - name: notes_integrity

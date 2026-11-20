@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+tmp/
+src-tauri/target/
+server/
+
+# The DNAs' build trees. The PACKED files are committed, on purpose: a
+# rebuild is a new DNA hash, which is a new, empty network. What ships is
+# what is committed (dna/build.sh says more).
+dna/target/
+dna/.agent-linking/
+dna/tests/target/
+dna/tests/hostile/target/
+# The loose wasm files the pack is made from: build outputs.
+dna/*/workdir/*.wasm
+
+# The conductor and key store binaries: fetched per platform, not committed
+# (README, "The conductor you ship").
+src-tauri/binaries/
+
+# Environment (holds your Flowsta client id: .env.example is the template)
+.env
+.env.local
+
+# IDE and OS
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# WebdriverIO run logs (npm run e2e)
+/logs/

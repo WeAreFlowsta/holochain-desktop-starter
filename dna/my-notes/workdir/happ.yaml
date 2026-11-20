@@ -1,0 +1,12 @@
+---
+manifest_version: "0"
+name: starter_my_notes_v1_happ
+description: "My notes: a person's own notes, on a network of their own devices"
+roles:
+  - name: my_notes
+    provisioning:
+      strategy: create
+      deferred: false
+    dna:
+      path: starter_my_notes_v1.dna
+      clone_limit: 0

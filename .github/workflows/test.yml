@@ -1,0 +1,167 @@
+name: Tests
+
+# Everything that can be proven without a desktop session, on every push
+# and pull request. The UI suite needs a display and a Vault
+# test instance: it is run by hand before a release (e2e/README.md).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  # The page: type-checked and built the way a release builds it (a vite
+  # build alone does not type-check), and the rulebook for what a screen may
+  # say (src/lib/sense.ts).
+  front-end:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Type-check and build
+        run: npm run build
+      - name: Unit tests
+        run: npm run test:unit
+      # The packed DNAs, the copies the installer ships and their hashes
+      # must agree before anything is tagged.
+      - name: Bundle-sync check
+        run: node scripts/check-bundle-sync.mjs
+
+  rust-tests:
+    # The same tests on each platform the app ships for: paths, sidecar
+    # names and process handling differ between them.
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [ubuntu-latest, macos-latest, windows-2022]
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgtk-3-dev \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      # The Tauri build script refuses to compile unless the sidecar
+      # binaries (externalBin) and the front end's dist exist. Unit tests
+      # never start the sidecars and never load the page, so placeholders
+      # are enough here; the release workflow fetches the real binaries.
+      # The names come from tauri.conf.json, so a renamed app needs no
+      # change here. bash on Windows too, for this step only.
+      - name: Placeholder sidecars and front-end dist for the build script
+        shell: bash
+        run: |
+          mkdir -p src-tauri/binaries dist
+          triple=$(cd src-tauri && rustc -vV | sed -n 's/^host: //p')
+          ext=""; [ "$RUNNER_OS" = Windows ] && ext=".exe"
+          for b in $(node -e 'for (const b of require("./src-tauri/tauri.conf.json").bundle.externalBin) console.log(b)'); do
+            f="src-tauri/$b-$triple$ext"
+            [ -f "$f" ] || { printf '#!/bin/sh\nexit 0\n' > "$f"; chmod +x "$f"; }
+          done
+
+      # The installer's wait for the program file at an update, run for
+      # real: the file is held for four seconds, as Windows can hold a
+      # program that has just exited, and the installer must wait and then
+      # write it. With no /UPDATE it must not wait.
+      - name: Installer waits for the program file at an update
+        if: runner.os == 'Windows'
+        shell: pwsh
+        working-directory: src-tauri/windows
+        run: |
+          $makensis = Join-Path ${env:ProgramFiles(x86)} "NSIS\makensis.exe"
+          if (-not (Test-Path $makensis)) { choco install nsis -y --no-progress | Out-Null }
+          & $makensis /V2 hook-test.nsi
+          if ($LASTEXITCODE -ne 0) { throw "the installer hooks did not compile" }
+          New-Item -ItemType Directory -Force hook-test-inst | Out-Null
+          $target = Join-Path (Get-Location) "hook-test-inst\hook-target.exe"
+          function Hold([int]$seconds) {
+            Set-Content -Path $target -Value "old"
+            Start-Job -ArgumentList $target, $seconds -ScriptBlock {
+              param($path, $secs)
+              $f = [IO.File]::Open($path, 'Open', 'ReadWrite', 'None')
+              Start-Sleep -Seconds $secs
+              $f.Close()
+            } | Out-Null
+            Start-Sleep -Seconds 1
+          }
+          Hold 4
+          $clock = [Diagnostics.Stopwatch]::StartNew()
+          $run = Start-Process .\hook-test.exe -ArgumentList "/UPDATE" -Wait -PassThru
+          $took = $clock.Elapsed.TotalSeconds
+          "update: exit $($run.ExitCode) after $([math]::Round($took, 1)) s; the file holds '$(Get-Content $target)'"
+          if ($run.ExitCode -ne 0) { throw "at an update the held program file was not written" }
+          if ($took -lt 2) { throw "the installer did not wait for the held file" }
+          if ((Get-Content $target) -ne "new") { throw "the program file was not replaced" }
+          Get-Job | Wait-Job | Remove-Job
+          Hold 4
+          $clock = [Diagnostics.Stopwatch]::StartNew()
+          $run = Start-Process .\hook-test.exe -Wait -PassThru
+          $took = $clock.Elapsed.TotalSeconds
+          "by hand: exit $($run.ExitCode) after $([math]::Round($took, 1)) s"
+          if ($took -gt 2) { throw "an install by hand was held up by the update wait" }
+          if ($run.ExitCode -ne 3) { throw "expected the held file to refuse the write when nothing waits" }
+          Get-Job | Wait-Job | Remove-Job
+
+      - name: Run unit tests
+        working-directory: src-tauri
+        run: cargo test --lib
+
+      # The test door and the UI suite's WebDriver must build on every
+      # platform too (test builds only; never a release).
+      - name: Test-feature check
+        working-directory: src-tauri
+        run: cargo check --features e2e
+
+      # Debug builds skip every #[cfg(not(debug_assertions))] arm; code used
+      # only there rots unseen. Compile those arms on every push instead.
+      - name: Release-profile check
+        working-directory: src-tauri
+        run: cargo check --release
+
+  # The networks' rules, on real conductors: what an author may do, what
+  # anyone else is refused, and that a stranger's own coordinator gets
+  # nothing past them. Run against the PACKED DNAs that are committed and
+  # shipped, never a fresh build (a rebuild is another DNA hash, another
+  # network).
+  dna-rules:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            dna/tests
+            dna/tests/hostile
+
+      # A stranger's own coordinator beside the real integrity zome. Test
+      # only, never bundled. Built with the flags the DNAs' own build uses
+      # (dna/build.sh).
+      - name: The stranger's coordinator
+        working-directory: dna/tests/hostile
+        env:
+          RUSTFLAGS: --cfg getrandom_backend="custom"
+        run: cargo build --release --target wasm32-unknown-unknown
+
+      # One test at a time (dna/tests/.cargo/config.toml says why).
+      - name: Rule tests
+        working-directory: dna/tests
+        run: cargo test

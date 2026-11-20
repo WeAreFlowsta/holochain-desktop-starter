@@ -1,0 +1,13 @@
+[workspace]
+members = [
+    "zomes/notes/integrity",
+    "zomes/notes/coordinator",
+]
+resolver = "2"
+
+# Holochain 0.7.1. Both must move together, with the conductor the app ships.
+[workspace.dependencies]
+hdi = "=0.8.1"
+hdk = "=0.7.1"
+serde = "1.0"
+holochain_serialized_bytes = "*"

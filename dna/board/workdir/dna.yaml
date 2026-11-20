@@ -1,0 +1,27 @@
+---
+manifest_version: "0"
+name: starter_board_v1
+integrity:
+  # Never used as it stands: the app installs this DNA with its own network
+  # name as the seed (BOARD_NETWORK in src-tauri/src/names.rs), so every
+  # app built from this code has a board of its own.
+  network_seed: "replaced-at-install-by-the-apps-own-network-name"
+  properties: ~
+  zomes:
+    - name: agent_linking_integrity
+      path: agent_linking_integrity.wasm
+      dependencies: []
+    - name: notes_integrity
+      path: board_notes_integrity.wasm
+      dependencies: []
+
+coordinator:
+  zomes:
+    - name: agent_linking
+      path: agent_linking_coordinator.wasm
+      dependencies:
+        - name: agent_linking_integrity
+    - name: notes
+      path: board_notes_coordinator.wasm
+      dependencies:
+        - name: notes_integrity

@@ -1,0 +1,23 @@
+[package]
+name = "starter-dna-tests"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "The two Notes DNAs on a real Holochain 0.7.1 conductor: what the rules allow, and what they refuse from a stranger's own coordinator"
+
+# Its own workspace on purpose: the DNA crates build for wasm32 and must
+# never pull the conductor crate in.
+[workspace]
+
+[dependencies]
+board_notes_coordinator = { path = "../board/zomes/notes/coordinator" }
+my_notes_coordinator = { path = "../my-notes/zomes/notes/coordinator" }
+serde = { version = "1", features = ["derive"] }
+
+[dev-dependencies]
+holochain = { version = "=0.7.1", features = ["test_utils"] }
+holo_hash = { version = "0.7.1", features = ["encoding"] }
+tokio = { version = "1", features = ["full"] }
+
+[profile.dev]
+debug = 0

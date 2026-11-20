@@ -1,0 +1,75 @@
+[package]
+name = "starter"
+version = "0.1.0"
+description = "Holochain Desktop Starter: a desktop app on Holochain with Flowsta sign-in, a public and a private network, backups, devices and signed updates"
+authors = ["Team Flowsta"]
+license = "MIT"
+edition = "2021"
+rust-version = "1.93"
+
+[lib]
+name = "app_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.5.4", features = [] }
+
+[dependencies]
+serde_json = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+log = "0.4"
+tauri = { version = "~2.12.5", features = ["devtools"] }
+tauri-plugin-log = "2"
+tauri-plugin-shell = "2"
+tokio = { version = "1", features = ["full"] }
+
+# Holochain 0.7.1. These three move together, with the conductor and key
+# store the app ships (binaries/) and the lines library's `line-07`
+# feature: a conductor accepts only clients and a key store of its own
+# version.
+holochain_client = { version = "=0.9.1", default-features = false, features = ["lair_signing"] }
+holochain_types = "=0.7.1"
+lair_keystore_api = "=0.7.1"
+
+# The key store's passphrase.
+rand = "0.8"
+
+# Hashes and keys as text.
+base64 = "0.22"
+
+# Asking the Vault (it listens on localhost only).
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+
+# The key store's socket address is a URL: its path is percent-encoded
+# ("Application%20Support" on every Mac).
+percent-encoding = "2"
+
+# The app's own updates: the updater plugin (Tauri's signature on the file)
+# and the release manifest check (your release identity's signature on the
+# release).
+tauri-plugin-updater = "~2.12.0"
+flowsta-update-check = { git = "https://github.com/WeAreFlowsta/flowsta-update-check", rev = "fbb773dae3b714f2954a86c25751438053248925" }
+url = "2"
+
+# Running the conductor and its key store: start, watch, restart, stop,
+# orphan sweep, the kit cache. One line of Holochain only.
+async-trait = "0.1"
+flowsta-hc-lines = { git = "https://github.com/WeAreFlowsta/flowsta-hc-lines", rev = "0b977e9ba10d752778224121ad749cf2598c456b", default-features = false, features = ["line-07"] }
+# The Flowsta side: finding the Vault, the identity link, the device key,
+# profiles, and the secret that makes a person's private network.
+flowsta-vault-client = { git = "https://github.com/WeAreFlowsta/flowsta-rust-sdk", rev = "ec550068c52c2964b7f6211b11f024f328f3a25f" }
+
+# The test harness's localhost server (feature `harness`, test builds only).
+axum = { version = "0.7", optional = true, default-features = false, features = ["http1", "json", "tokio"] }
+# The embedded WebDriver the UI suite drives (feature `e2e`, test builds only).
+tauri-plugin-wdio-webdriver = { version = "1.4", optional = true }
+
+[features]
+# Test builds only (scripts/build-test-binary.sh), never a release build:
+# scripts/check-test-features.mjs refuses them in the default features and
+# in every workflow.
+harness = ["dep:axum"]
+e2e = ["harness", "dep:tauri-plugin-wdio-webdriver"]
+
+[dev-dependencies]
+tempfile = "3"

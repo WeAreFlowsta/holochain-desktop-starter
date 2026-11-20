@@ -389,18 +389,21 @@ if (!fs.existsSync(toolKeyFile)) {
   fs.writeFileSync(toolKeyFile, generateKeyPairSync('ed25519').privateKey.export({ format: 'pem', type: 'pkcs8' }), { mode: 0o600 });
 }
 const appKey = agentKeyText(createPublicKey(createPrivateKey(fs.readFileSync(toolKeyFile, 'utf8'))).export({ format: 'der', type: 'spki' }).subarray(-32));
-const linked = await fetch(`${VAULT}/link-status?app_agent_pub_key=${encodeURIComponent(appKey)}`, { headers: { Origin: ORIGIN } }).then((r) => r.json()).catch(() => ({ linked: false }));
+// Every request names the app by its client id: a Vault that holds links to
+// several apps from this tool's origin (two projects released from one
+// computer) refuses a request that does not say which one it is.
+const fromEnvFile = fs.existsSync('.env') ? (/^\s*VITE_FLOWSTA_CLIENT_ID\s*=\s*["']?([^"'\s]+)/m.exec(fs.readFileSync('.env', 'utf8')) || [])[1] : undefined;
+const clientId = process.env.FLOWSTA_RELEASE_CLIENT_ID || process.env.VITE_FLOWSTA_CLIENT_ID || fromEnvFile;
+if (!clientId) throw new Error('put your app\'s client id in .env (VITE_FLOWSTA_CLIENT_ID) or in FLOWSTA_RELEASE_CLIENT_ID');
+const linked = await fetch(`${VAULT}/link-status?app_agent_pub_key=${encodeURIComponent(appKey)}&client_id=${encodeURIComponent(clientId)}`, { headers: { Origin: ORIGIN } }).then((r) => r.json()).catch(() => ({ linked: false }));
 if (!linked.linked) {
-  const fromEnvFile = fs.existsSync('.env') ? (/^\s*VITE_FLOWSTA_CLIENT_ID\s*=\s*["']?([^"'\s]+)/m.exec(fs.readFileSync('.env', 'utf8')) || [])[1] : undefined;
-  const clientId = process.env.FLOWSTA_RELEASE_CLIENT_ID || process.env.VITE_FLOWSTA_CLIENT_ID || fromEnvFile;
-  if (!clientId) throw new Error('first run: put your app\'s client id in .env (VITE_FLOWSTA_CLIENT_ID) or in FLOWSTA_RELEASE_CLIENT_ID');
   console.log('connecting this tool to your Vault (approve it there within a minute)...');
   const r = await postToVault(`${VAULT}/link-identity`, ORIGIN, { app_name: `${NAME} (release tool)`, client_id: clientId, app_agent_pub_key: appKey });
   if (r.status === 408) throw new Error('nobody answered the connect request in your Vault within its time limit; nothing was signed. Run this again and approve it there');
   if (!r.ok) throw new Error(`the Vault did not connect the tool: ${r.status} ${await r.text()} (is ${ORIGIN} one of your app's registered origins at dev.flowsta.com?)`);
 }
 console.log('asking the Vault to sign (approve it there within ten minutes; check the version, channel and hashes against the lines above)...');
-const signRes = await postToVault(`${VAULT}/sign-release-manifest`, ORIGIN, { manifest });
+const signRes = await postToVault(`${VAULT}/sign-release-manifest`, ORIGIN, { manifest, client_id: clientId });
 if (!signRes.ok) throw new Error(`sign refused: ${signRes.status} ${await signRes.text()}`);
 const signed = await signRes.json();
 if (signed.statement !== statement) throw new Error(`the Vault signed a different statement:\n  vault ${signed.statement}\n  here  ${statement}`);

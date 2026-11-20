@@ -394,8 +394,9 @@ if (!linked.linked) {
   const fromEnvFile = fs.existsSync('.env') ? (/^\s*VITE_FLOWSTA_CLIENT_ID\s*=\s*["']?([^"'\s]+)/m.exec(fs.readFileSync('.env', 'utf8')) || [])[1] : undefined;
   const clientId = process.env.FLOWSTA_RELEASE_CLIENT_ID || process.env.VITE_FLOWSTA_CLIENT_ID || fromEnvFile;
   if (!clientId) throw new Error('first run: put your app\'s client id in .env (VITE_FLOWSTA_CLIENT_ID) or in FLOWSTA_RELEASE_CLIENT_ID');
-  console.log('connecting this tool to your Vault (approve it there)...');
+  console.log('connecting this tool to your Vault (approve it there within a minute)...');
   const r = await postToVault(`${VAULT}/link-identity`, ORIGIN, { app_name: `${NAME} (release tool)`, client_id: clientId, app_agent_pub_key: appKey });
+  if (r.status === 408) throw new Error('nobody answered the connect request in your Vault within its time limit; nothing was signed. Run this again and approve it there');
   if (!r.ok) throw new Error(`the Vault did not connect the tool: ${r.status} ${await r.text()} (is ${ORIGIN} one of your app's registered origins at dev.flowsta.com?)`);
 }
 console.log('asking the Vault to sign (approve it there within ten minutes; check the version, channel and hashes against the lines above)...');

@@ -2,6 +2,11 @@
 
 What changed in each release. The release workflow takes a version's block as its release notes.
 
+## [Unreleased]
+
+- With automatic updates switched off, Settings > Updates says when a newer version is out. Nothing is downloaded until the person switches them on or installs it.
+- The release tool names its app on every request to the Vault, and says plainly when nobody answered the connect request.
+
 ## [0.1.0] - 2026-11-21
 
 The first release of the Holochain Desktop Starter.
